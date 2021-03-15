@@ -48,4 +48,6 @@ ecbuild_bundle( PROJECT gsw             GIT "https://github.com/jcsda-internal/G
 ecbuild_bundle( PROJECT ufo             GIT "https://github.com/jcsda-internal/ufo.git"             UPDATE TAG 32ac58e )
 ecbuild_bundle( PROJECT ucldas          SOURCE "../" )
 
+add_subdirectory( ucland )
+
 ecbuild_bundle_finalize()
