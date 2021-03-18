@@ -92,6 +92,11 @@ ecbuild_add_executable( TARGET  convert_restart_vec2tiles.x
                         LIBS    utils
                       )
 
+ecbuild_add_executable( TARGET  generate_transformation_static.x
+                        SOURCES ./mains/generate_transformation_static.F90
+                        LIBS    utils
+                      )
+
 if(ECBUILD_INSTALL_FORTRAN_MODULES)
   install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR} DESTINATION ${INSTALL_INCLUDE_DIR} )
 endif()
