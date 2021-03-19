@@ -4,8 +4,11 @@ module module_nf90_utilities
   public unf90_io_varatt, unf90_io_var
   interface unf90_io_varatt
     module procedure unf90_io_varatt_char
+    module procedure unf90_io_varatt_real
+    module procedure unf90_io_varatt_int
   end interface
   interface unf90_io_var
+    module procedure unf90_io1d_int
     module procedure unf90_io1d_real
     module procedure unf90_io1d_double
     module procedure unf90_io2d_real
@@ -15,6 +18,7 @@ module module_nf90_utilities
     module procedure unf90_io2d_time_real
     module procedure unf90_io2d_time_double
     module procedure unf90_io3d_real
+    module procedure unf90_io3d_int
     module procedure unf90_io3d_double
     module procedure unf90_io4d_real
     module procedure unf90_io4d_double
@@ -128,6 +132,79 @@ module module_nf90_utilities
     enddo
   end subroutine unf90_copy_global_att
 !----------------------------------------
+  subroutine unf90_copy_var(incid, oncid, vname)
+  implicit none
+  integer, intent(in)           :: incid, oncid
+  character(len=*), intent(in)  :: vname
+  real, allocatable             :: r1d(:)
+  double precision, allocatable :: d1d(:)
+  integer, allocatable          :: i1d(:), istart(:), icount(:), vdimids(:), dlen(:)
+  integer                       :: xtype, vdims, iret, ivarid, ovarid, loops, loop
+  integer                       :: i, iv, blocks, dimid, acc
+  loops = 1
+  iret = nf90_inq_varid(incid, trim(vname), ivarid)
+  call unf90_check_err(iret)
+  iret = nf90_inq_varid(oncid, trim(vname), ovarid)
+  call unf90_check_err(iret)
+  iret = nf90_inquire_variable(incid, ivarid, xtype=xtype, ndims=vdims)
+  call unf90_check_err(iret)
+  if(vdims > 0) then
+    allocate(vdimids(vdims))
+    allocate(dlen(vdims))
+    allocate(istart(vdims))
+    allocate(icount(vdims))
+    iret = nf90_inquire_variable(incid, ivarid, dimids=vdimids(:))
+    call unf90_check_err(iret)
+    do iv = 1, vdims
+      iret = nf90_inquire_dimension(incid, vdimids(iv), len=dlen(iv))
+      call unf90_check_err(iret)  
+      loops = loops*dlen(iv)
+    enddo
+    loops = loops/dlen(1)
+    blocks = 0
+    istart = 1
+    icount = 1
+    icount(1) = dlen(1)
+    dimid = 1
+    do loop = 1, loops
+      blocks = blocks+dlen(1)
+      if(xtype == nf90_float) then
+        allocate(r1d(dlen(1)))
+        call unf90_io1d_real('r', incid, dlen(1), r1d, vname, istart, icount)
+        call unf90_io1d_real('w', oncid, dlen(1), r1d, vname, istart, icount)
+        deallocate(r1d)
+      else if(xtype == nf90_double) then
+        allocate(d1d(dlen(1)))
+        call unf90_io1d_double('r', incid, dlen(1), d1d, vname, istart, icount)
+        call unf90_io1d_double('w', oncid, dlen(1), d1d, vname, istart, icount)
+        deallocate(d1d)
+      else if(xtype == nf90_int) then
+        allocate(i1d(dlen(1)))
+        call unf90_io1d_int('r', incid, dlen(1), i1d, vname, istart, icount)
+        call unf90_io1d_int('w', oncid, dlen(1), i1d, vname, istart, icount)
+        deallocate(i1d)
+      else
+        write(*,*) 'error: invalid xtype in copy_var'
+        stop 
+      endif
+      acc = 1
+      do i = 1, dimid
+        acc = acc*dlen(i)
+      enddo
+      if(blocks >= acc .and. loop /= loops) then
+        dimid = dimid + 1
+        istart(dimid) = 1
+      else
+        istart(dimid) = istart(dimid) + 1
+      endif
+    enddo
+    deallocate(vdimids)
+    deallocate(dlen)
+    deallocate(istart)
+    deallocate(icount)
+  endif
+  end subroutine unf90_copy_var
+!----------------------------------------
   subroutine unf90_copy_var_att(ncid_in, vname_in, ncid_out, vname_out)
   implicit none
   character(len=*), intent(in) :: vname_in, vname_out
@@ -223,6 +300,62 @@ module module_nf90_utilities
   call unf90_check_err(iret)
   end subroutine unf90_io_varatt_char
 !----------------------------------------
+  subroutine unf90_io_varatt_int(option, ncid, vname, aname, value)
+  implicit none
+  integer, intent(in)           :: ncid
+  character(len=*), intent(in)  :: option, vname, aname
+  integer, intent(inout)        :: value
+  integer                       :: varid, iret
+  if(trim(vname) == 'nf90_global') then
+    if(trim(option) == 'r') then
+      iret = nf90_get_att(ncid, nf90_global, trim(aname), value)
+    else if(trim(option) == 'w') then
+      iret = nf90_put_att(ncid, nf90_global, trim(aname), value)
+    else
+      stop 'invalid option'
+    endif
+  else
+    iret = nf90_inq_varid(ncid, trim(vname), varid)
+    call unf90_check_err(iret)
+    if(trim(option) == 'r') then
+      iret = nf90_get_att(ncid, varid, trim(aname), value)
+    else if(trim(option) == 'w') then
+      iret = nf90_put_att(ncid, varid, trim(aname), value)
+    else
+      stop 'invalid option'
+    endif
+  endif
+  call unf90_check_err(iret)
+  end subroutine unf90_io_varatt_int
+!----------------------------------------
+  subroutine unf90_io_varatt_real(option, ncid, varname, vname, value)
+  implicit none
+  integer,          intent(in)    :: ncid
+  character(len=*), intent(in)    :: option, varname, vname
+  real,             intent(inout) :: value
+  integer                         :: varid, iret
+  if(trim(varname) == 'nf90_global') then
+    if(trim(option) == 'r') then
+      iret = nf90_get_att(ncid, nf90_global, trim(vname), value)
+    else if(trim(option) == 'w') then
+      iret = nf90_put_att(ncid, nf90_global, trim(vname), value)
+    else
+      stop 'invalid option'
+    endif
+  else
+    iret = nf90_inq_varid(ncid, trim(varname), varid)
+    call unf90_check_err(iret)
+    if(trim(option) == 'r') then
+      iret = nf90_get_att(ncid, varid, trim(vname), value)
+    else if(trim(option) == 'w') then
+      iret = nf90_put_att(ncid, varid, trim(vname), value)
+    else
+      stop 'invalid option'
+    endif
+  endif
+  call unf90_check_err(iret)
+  end subroutine unf90_io_varatt_real
+!----------------------------------------
   subroutine unf90_def_end(ncid)
   implicit none
   integer, intent(in) :: ncid
@@ -268,6 +401,36 @@ module module_nf90_utilities
   endif
   call unf90_check_err(iret)
   end subroutine unf90_io0d_double
+!----------------------------------------
+  subroutine unf90_io1d_int(mode, ncid, ii, i1d, vname, istart, icount)
+  implicit none
+  character(len=1),  intent(in)    :: mode
+  integer,           intent(in)    :: ncid, ii
+  integer,           intent(inout) :: i1d(ii)
+  character(len=*),  intent(in)    :: vname
+  integer, optional, intent(in)    :: istart(:), icount(:)
+  integer                          :: iret, varid
+  iret = nf90_inq_varid(ncid, trim(vname), varid)
+  call unf90_check_err(iret)
+  if(present(icount)) then
+    if(mode == 'r' .or. mode == 'r') then
+      iret = nf90_get_var(ncid, varid, i1d, istart, icount)
+    else if(mode == 'w' .or. mode == 'w') then
+      iret = nf90_put_var(ncid, varid, i1d, istart, icount)
+    else
+      stop 'invalid mode'
+    endif
+  else
+    if(mode == 'r' .or. mode == 'r') then
+      iret = nf90_get_var(ncid, varid, i1d)
+    else if(mode == 'w' .or. mode == 'w') then
+      iret = nf90_put_var(ncid, varid, i1d)
+    else
+      stop 'invalid mode'
+    endif
+  endif
+  call unf90_check_err(iret)
+  end subroutine unf90_io1d_int
 !----------------------------------------
   subroutine unf90_io1d_real(mode, ncid, ii, r1d, vname, istart, icount)
   implicit none
@@ -460,6 +623,25 @@ module module_nf90_utilities
   endif
   call unf90_check_err(iret)
   end subroutine unf90_io2d_time_double
+!----------------------------------------
+  subroutine unf90_io3d_int(mode, ncid, lon, lat, lev, i3d, vname)
+  implicit none
+  character(len=1), intent(in)    :: mode
+  integer,          intent(in)    :: ncid, lon, lat, lev
+  integer,          intent(inout) :: i3d(lon,lat,lev)
+  character(len=*)                :: vname
+  integer                         :: iret, varid
+  iret = nf90_inq_varid(ncid, trim(vname), varid)
+  call unf90_check_err(iret)
+  if(mode == 'r' .or. mode == 'R') then
+    iret = nf90_get_var(ncid, varid, i3d)
+  else if(mode == 'w' .or. mode == 'W') then
+    iret = nf90_put_var(ncid, varid, i3d)
+  else
+    stop 'invalid mode'
+  endif
+  call unf90_check_err(iret)
+  end subroutine unf90_io3d_int
 !----------------------------------------
   subroutine unf90_io3d_real(mode, ncid, lon, lat, lev, r3d, vname)
   implicit none
