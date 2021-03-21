@@ -92,8 +92,8 @@ ecbuild_add_executable( TARGET  convert_restart_vec2tiles.x
                         LIBS    utils
                       )
 
-ecbuild_add_executable( TARGET  generate_transformation_static.x
-                        SOURCES ./mains/generate_transformation_static.F90
+ecbuild_add_executable( TARGET  transform_static_c96.x
+                        SOURCES ./mains/transform_static_c96.F90
                         LIBS    utils
                       )
 
