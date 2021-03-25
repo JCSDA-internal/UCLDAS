@@ -36,6 +36,11 @@ module module_nf90_utilities
     module procedure unf90_io4d_real
     module procedure unf90_io4d_double
   end interface
+  interface unf90_rd_tile2vec
+    module procedure unf90_rd1d_real_tile2vec
+    module procedure unf90_rd2d_real_tile2vec
+    module procedure unf90_rd3d_real_tile2vec
+  end interface
   public unf90_get_var_type
   public unf90_check_var_type
   !public utools_subStrCounts
@@ -922,6 +927,28 @@ end subroutine unf90_get_istart
   call unf90_check_err(iret)
   end subroutine unf90_io2d_real
 !----------------------------------------
+  subroutine unf90_rd1d_real_tile2vec(ncid, ii, jj, vec_index, location, r1d, vname)
+  implicit none
+  integer,          intent(in)  :: ncid, ii, jj, location
+  integer,          intent(in)  :: vec_index(ii, jj)
+  real,             intent(out) :: r1d(location)
+  real,             allocatable :: r2d(:,:)
+  character(len=*), intent(in)  :: vname
+  integer                       :: iret, varid, i, j, ip
+  iret = nf90_inq_varid(ncid, trim(vname), varid)
+  call unf90_check_err(iret)
+  allocate(r2d(ii,jj))
+  iret = nf90_get_var(ncid, varid, r2d)
+  do i = 1, ii
+      do j = 1, jj
+          ip = vec_index(i,j)
+          if(ip > 0) r1d(ip) = r2d(i,j)
+      enddo
+  enddo
+  call unf90_check_err(iret)
+  deallocate(r2d)
+  end subroutine unf90_rd1d_real_tile2vec
+!----------------------------------------
   subroutine unf90_io2d_int(mode, ncid, lon, lat, i2d, vname)
   implicit none
   character(len=1), intent(in)    :: mode
@@ -1027,6 +1054,30 @@ end subroutine unf90_get_istart
   call unf90_check_err(iret)
   end subroutine unf90_io3d_real
 !----------------------------------------
+  subroutine unf90_rd2d_real_tile2vec(ncid, ii, jj, kk, vec_index, location, r2d, vname)
+  implicit none
+  integer,          intent(in)  :: ncid, ii, jj, kk, location
+  integer,          intent(in)  :: vec_index(ii, jj)
+  real,             intent(out) :: r2d(location,kk)
+  real,             allocatable :: r3d(:,:,:)
+  character(len=*), intent(in)  :: vname
+  integer                       :: iret, varid, i, j, k, ip
+  iret = nf90_inq_varid(ncid, trim(vname), varid)
+  call unf90_check_err(iret)
+  allocate(r3d(ii,jj,kk))
+  iret = nf90_get_var(ncid, varid, r3d)
+  do i = 1, ii
+    do j = 1, jj
+      ip = vec_index(i,j)
+      do k = 1, kk
+        if(ip > 0) r2d(ip,k) = r3d(i,j,k)
+      enddo
+    enddo
+  enddo
+  call unf90_check_err(iret)
+  deallocate(r3d)
+  end subroutine unf90_rd2d_real_tile2vec
+!----------------------------------------
   subroutine unf90_io3d_double(mode, ncid, lon, lat, lev, d3d, vname)
   implicit none
   character(len=1), intent(in)    :: mode
@@ -1064,6 +1115,32 @@ end subroutine unf90_get_istart
   endif
   call unf90_check_err(iret)
   end subroutine unf90_io4d_real
+!----------------------------------------
+  subroutine unf90_rd3d_real_tile2vec(ncid, ii, jj, kk, mm, vec_index, location, r3d, vname)
+  implicit none
+  integer,          intent(in)  :: ncid, ii, jj, kk, mm, location
+  integer,          intent(in)  :: vec_index(ii, jj)
+  real,             intent(out) :: r3d(location,kk,mm)
+  real,             allocatable :: r4d(:,:,:,:)
+  character(len=*), intent(in)  :: vname
+  integer                       :: iret, varid, i, j, k, m, ip
+  iret = nf90_inq_varid(ncid, trim(vname), varid)
+  call unf90_check_err(iret)
+  allocate(r4d(ii,jj,kk,mm))
+  iret = nf90_get_var(ncid, varid, r4d)
+  do i = 1, ii
+    do j = 1, jj
+      ip = vec_index(i,j)
+      do k = 1, kk
+        do m = 1, mm
+          if(ip > 0) r3d(ip,k,m) = r4d(i,j,k,m)
+        enddo
+      enddo
+    enddo
+  enddo
+  call unf90_check_err(iret)
+  deallocate(r4d)
+  end subroutine unf90_rd3d_real_tile2vec
 !----------------------------------------
   subroutine unf90_io4d_double(mode, ncid, xds, yds, zds, tds, d4d, vname)
   implicit none

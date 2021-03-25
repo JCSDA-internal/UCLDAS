@@ -91,12 +91,14 @@ ecbuild_add_executable( TARGET  convert_restart_vec2tiles.x
                         SOURCES ./mains/convert_restart_vec2tiles.F90
                         LIBS    utils
                       )
-
+ecbuild_add_executable( TARGET  convert_restart_tiles2vec.x
+                        SOURCES ./mains/convert_restart_tiles2vec.F90
+                        LIBS    utils
+                      )
 ecbuild_add_executable( TARGET  transform_static_c96.x
                         SOURCES ./mains/transform_static_c96.F90
                         LIBS    utils
                       )
-
 if(ECBUILD_INSTALL_FORTRAN_MODULES)
   install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR} DESTINATION ${INSTALL_INCLUDE_DIR} )
 endif()
