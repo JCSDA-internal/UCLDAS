@@ -1,0 +1,168 @@
+! (C) Copyright 2017-2020 UCAR
+!
+! This software is licensed under the terms of the Apache Licence Version 2.0
+! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+module ucldas_geom_mod_c
+
+use atlas_module, only: atlas_fieldset, atlas_functionspace_pointcloud
+use iso_c_binding
+use fckit_configuration_module, only: fckit_configuration
+use fckit_mpi_module,           only: fckit_mpi_comm
+use ucldas_geom_mod, only: ucldas_geom
+
+implicit none
+
+private
+public :: ucldas_geom_registry
+
+#define LISTED_TYPE ucldas_geom
+
+!> Linked list interface - defines registry_t type
+#include "oops/util/linkedList_i.f"
+
+!> Global registry
+type(registry_t) :: ucldas_geom_registry
+
+! ------------------------------------------------------------------------------
+contains
+! ------------------------------------------------------------------------------
+
+!> Linked list implementation
+#include "oops/util/linkedList_c.f"
+
+! ------------------------------------------------------------------------------
+!> Setup geometry object
+subroutine c_ucldas_geo_setup(c_key_self, c_conf, c_comm) bind(c,name='ucldas_geo_setup_f90')
+
+  integer(c_int),  intent(inout) :: c_key_self
+  type(c_ptr),        intent(in) :: c_conf
+  type(c_ptr), value, intent(in) :: c_comm
+
+  type(ucldas_geom), pointer :: self
+
+  call ucldas_geom_registry%init()
+  call ucldas_geom_registry%add(c_key_self)
+  call ucldas_geom_registry%get(c_key_self,self)
+
+  call self%init(fckit_configuration(c_conf), fckit_mpi_comm(c_comm) )
+
+end subroutine c_ucldas_geo_setup
+
+! --------------------------------------------------------------------------------------------------
+!> Set ATLAS lonlat fieldset
+subroutine c_ucldas_geo_set_atlas_lonlat(c_key_self, c_afieldset)  bind(c,name='ucldas_geo_set_atlas_lonlat_f90')
+
+  integer(c_int), intent(in) :: c_key_self
+  type(c_ptr), intent(in), value :: c_afieldset
+
+  type(ucldas_geom), pointer :: self
+  type(atlas_fieldset) :: afieldset
+
+  call ucldas_geom_registry%get(c_key_self,self)
+  afieldset = atlas_fieldset(c_afieldset)
+
+  call self%set_atlas_lonlat(afieldset)
+
+end subroutine c_ucldas_geo_set_atlas_lonlat
+
+! --------------------------------------------------------------------------------------------------
+!> Set ATLAS functionspace pointer
+subroutine c_ucldas_geo_set_atlas_functionspace_pointer(c_key_self,c_afunctionspace) &
+ & bind(c,name='ucldas_geo_set_atlas_functionspace_pointer_f90')
+
+  integer(c_int), intent(in)     :: c_key_self
+  type(c_ptr), intent(in), value :: c_afunctionspace
+
+  type(ucldas_geom),pointer :: self
+
+  call ucldas_geom_registry%get(c_key_self,self)
+
+  self%afunctionspace = atlas_functionspace_pointcloud(c_afunctionspace)
+
+end subroutine c_ucldas_geo_set_atlas_functionspace_pointer
+
+! --------------------------------------------------------------------------------------------------
+!> Fill ATLAS fieldset
+subroutine c_ucldas_geo_fill_atlas_fieldset(c_key_self, c_afieldset) &
+ & bind(c,name='ucldas_geo_fill_atlas_fieldset_f90')
+
+  integer(c_int),     intent(in) :: c_key_self
+  type(c_ptr), value, intent(in) :: c_afieldset
+
+  type(ucldas_geom), pointer :: self
+  type(atlas_fieldset) :: afieldset
+
+  call ucldas_geom_registry%get(c_key_self,self)
+  afieldset = atlas_fieldset(c_afieldset)
+
+  call self%fill_atlas_fieldset(afieldset)
+
+end subroutine c_ucldas_geo_fill_atlas_fieldset
+
+! ------------------------------------------------------------------------------
+!> Clone geometry object
+subroutine c_ucldas_geo_clone(c_key_self, c_key_other) bind(c,name='ucldas_geo_clone_f90')
+
+  integer(c_int), intent(in   ) :: c_key_self
+  integer(c_int), intent(inout) :: c_key_other
+
+  type(ucldas_geom), pointer :: self, other
+
+  call ucldas_geom_registry%add(c_key_other)
+  call ucldas_geom_registry%get(c_key_other, other)
+  call ucldas_geom_registry%get(c_key_self , self )
+
+  call self%clone(other)
+
+end subroutine c_ucldas_geo_clone
+
+! ------------------------------------------------------------------------------
+!> Generate grid
+subroutine c_ucldas_geo_gridgen(c_key_self) bind(c,name='ucldas_geo_gridgen_f90')
+
+  integer(c_int), intent(inout) :: c_key_self
+
+  type(ucldas_geom), pointer :: self
+
+  call ucldas_geom_registry%get(c_key_self, self)
+
+  call self%gridgen()
+
+end subroutine c_ucldas_geo_gridgen
+
+! ------------------------------------------------------------------------------
+!> Geometry destructor
+subroutine c_ucldas_geo_delete(c_key_self) bind(c,name='ucldas_geo_delete_f90')
+
+  integer(c_int), intent(inout) :: c_key_self
+
+  type(ucldas_geom), pointer :: self
+
+  call ucldas_geom_registry%get(c_key_self, self)
+  call self%end()
+  call ucldas_geom_registry%remove(c_key_self)
+
+end subroutine c_ucldas_geo_delete
+
+! ------------------------------------------------------------------------------
+!> return begin and end of local geometry
+subroutine c_ucldas_geo_start_end(c_key_self, ist, iend, jst, jend) bind(c, name='ucldas_geo_start_end_f90')
+
+  integer(c_int), intent( in) :: c_key_self
+  integer(c_int), intent(out) :: ist, iend, jst, jend
+
+  type(ucldas_geom), pointer :: self
+  call ucldas_geom_registry%get(c_key_self, self)
+
+  ist  = self%isc
+  iend = self%iec
+  jst  = self%jsc
+  jend = self%jec
+
+end subroutine c_ucldas_geo_start_end
+
+
+! ------------------------------------------------------------------------------
+
+end module ucldas_geom_mod_c
