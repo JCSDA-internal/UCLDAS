@@ -1,39 +1,44 @@
 program convert_restart_vec2tiles
   use module_nf90_utilities
+  implicit none
   real,                 parameter :: rfillValue = 9.96921e+36
   double precision,     parameter :: dfillValue = 9.96921d+36
   integer,            allocatable :: cube_i(:), cube_j(:), cube_tile(:), vdimids(:)
+  integer,            allocatable :: lsmask(:,:,:)
+  real,               allocatable :: orog_raw(:,:,:), orog_filt(:,:,:), slmsk(:,:,:), land_frac(:,:,:)
   character(len=128), allocatable :: vnames(:), vdname(:)
   integer                         :: location, nx, ny, tiles
   integer                         :: incid, oncid, nDims, nVars, nAtts, uDimId
-  integer                         :: iret, dlen, xtype, vdims, vid, dimid_location
+  integer                         :: iargs, iv, iret, dlen, xtype, vdims, vid, dimid_location
   logical                         :: found, error
-  character(len=256)              :: ifname, ofname, dname_in, dname_out, attname, vdnames
+  character(len=256)              :: ifname_static, ifname_vec, ofname, dname_in, dname_out, attname, vdnames
   character(len=256)              :: fname, tfname, exefile, script
   character(len=1)                :: ctile
-  integer                         :: tile
+  integer                         :: i, j, ip, tile
 ! read in command line arguments
   call getarg(0, exefile)
   iargs = iargc()
   error = .false.
-  if(iargs == 2) then
-      call getarg(1, fname)
-      call getarg(2, ofname)
-      script = trim(exefile)//' '//trim(fname)//' '//trim(ofname)
+  if(iargs == 3) then
+      call getarg(1, ifname_static)
+      call getarg(2, ifname_vec)
+      call getarg(3, ofname)
+      script = trim(exefile)//' '//trim(ifname_static)//' '//trim(ifname_vec)//' '//trim(ofname)
   else
       error = .true.
   endif
   if(error) then
-      write(*,*) 'Usage: '//trim(exefile)//' input_file_name output_file_name'
+      write(*,*) 'Usage: '//trim(exefile)//' static_file_name input_file_name output_file_name'
       stop
   else
       write(*,'(A168)') '  Run the program: '//trim(script)
-      write(*,'(A168)') '    Input file:  '//trim(fname)
-      write(*,'(A168)') '    Output file: '//fname(1:len_trim(fname)-3)//'tile?.nc4'
+      write(*,'(A168)') '    Static input file:  '//trim(ifname_static)
+      write(*,'(A168)') '    Vector input file:  '//trim(ifname_vec)
+      write(*,'(A168)') '    Output file:        '//ofname(1:len_trim(ofname)-3)//'tile?.nc4'
   endif
 ! read in the transformation matrix
-  ifname = '/scratch1/NCEPDEV/da/Zhichang.Guo/ucldas_build/ufs-land_C96_static_vec2tiles.nc4'
-  call unf90_op_ncfile('R', ifname, incid)
+! ifname_static = '/scratch1/NCEPDEV/da/Zhichang.Guo/ucldas_build/ufs-land_C96_static_vec2tiles.nc4'
+  call unf90_op_ncfile('R', ifname_static, incid)
   call unf90_get_dimlen(incid, 'fxdim',    nx)
   call unf90_get_dimlen(incid, 'fydim',    ny)
   call unf90_get_dimlen(incid, 'ntile',    tiles)
@@ -41,16 +46,35 @@ program convert_restart_vec2tiles
   allocate(cube_i(location))
   allocate(cube_j(location))
   allocate(cube_tile(location))
+  allocate(orog_raw(nx,ny,tiles))
+  allocate(orog_filt(nx,ny,tiles))
+  allocate(slmsk(nx,ny,tiles))
+  allocate(lsmask(nx,ny,tiles))
+  allocate(land_frac(nx,ny,tiles))
+  do i = 1, nx
+     do j = 1, ny
+        do tile = 1, tiles
+           lsmask(i,j,tile) = 0
+        enddo
+     enddo
+  enddo
   call unf90_io_var('r', incid, location, cube_i,    'cube_i')
   call unf90_io_var('r', incid, location, cube_j,    'cube_j')
   call unf90_io_var('r', incid, location, cube_tile, 'cube_tile')
+  call unf90_io_var(incid, nx, ny, tiles, orog_raw,  'orog_raw')
+  call unf90_io_var(incid, nx, ny, tiles, orog_filt, 'orog_filt')
+  call unf90_io_var(incid, nx, ny, tiles, slmsk,     'slmsk')
+  call unf90_io_var(incid, nx, ny, tiles, land_frac, 'land_frac')
   call unf90_close_ncfile(incid)
+  do ip = 1, location
+     lsmask(cube_i(ip), cube_j(ip), cube_tile(ip)) = 1
+  enddo
 !
 ! ifname = '/scratch1/NCEPDEV/da/Azadeh.Gholoubi/GlobalLand/ufs-land-driver/run/restart/ufs_land_output.2000-01-01_00-00-00.nc'
-  ifname = fname
-  call unf90_op_ncfile('R', ifname, incid)
+  call unf90_op_ncfile('R', ifname_vec, incid)
   call unf90_get_ncinfo(incid, nDimensions=nDims, nVariables=nVars, nAttributes=nAtts, unlimitedDimID=uDimId)
   allocate(vnames(nvars))
+
   do tile = 1, tiles
       write(ctile,'(i1)') tile
       tfname = trim(ofname)//'tile'//ctile//'.nc4'
@@ -102,9 +126,9 @@ program convert_restart_vec2tiles
           call unf90_copy_var_att(incid, vnames(iv), oncid, vnames(iv))
           if(found) then
               if(unf90_check_var_type(xtype, 'float')) then
-                  call unf90_out_varatt(oncid, vnames(iv), '_FillValue', rfillValue) 
+!                 call unf90_out_varatt(oncid, vnames(iv), '_FillValue', rfillValue) 
               else if(unf90_check_var_type(xtype, 'double')) then
-                  call unf90_out_varatt(oncid, vnames(iv), '_FillValue', dfillValue) 
+!                 call unf90_out_varatt(oncid, vnames(iv), '_FillValue', dfillValue) 
               else
                   stop 'invalid xtype in convert_restart_vec2tiles'
               endif
@@ -112,6 +136,11 @@ program convert_restart_vec2tiles
           deallocate(vdimids)
           deallocate(vdname)
       enddo
+      call unf90_def_var(oncid, 'int',   'xaxis_1,yaxis_1', 'lsmask')
+      call unf90_def_var(oncid, 'float', 'xaxis_1,yaxis_1', 'orog_raw')
+      call unf90_def_var(oncid, 'float', 'xaxis_1,yaxis_1', 'orog_filt')
+      call unf90_def_var(oncid, 'float', 'xaxis_1,yaxis_1', 'slmsk')
+      call unf90_def_var(oncid, 'float', 'xaxis_1,yaxis_1', 'land_frac')
 !     copy global attributes
       call unf90_copy_global_att(incid, oncid)
       call unf90_def_end(oncid)
@@ -120,7 +149,7 @@ program convert_restart_vec2tiles
           call unf90_get_var_dims(incid, vnames(iv), vdims)
           allocate(vdimids(vdims))
           call unf90_get_var_dimids(incid, iv, vdims, vdimids)
-          found = false
+          found = .false.
           do vid = 1, vdims
               if(vdimids(vid) == dimid_location) found = .true.
           enddo
@@ -131,12 +160,22 @@ program convert_restart_vec2tiles
           endif
           deallocate(vdimids)
       enddo
+      call unf90_io_var('w', oncid, nx, ny, lsmask(:,:,tile),    'lsmask')
+      call unf90_io_var('w', oncid, nx, ny, land_frac(:,:,tile), 'land_frac')
+      call unf90_io_var('w', oncid, nx, ny, orog_raw(:,:,tile),  'orog_raw')
+      call unf90_io_var('w', oncid, nx, ny, orog_filt(:,:,tile), 'orog_filt')
+      call unf90_io_var('w', oncid, nx, ny, slmsk(:,:,tile),     'slmsk')
       call unf90_close_ncfile(oncid)
   enddo
   deallocate(vnames)
   deallocate(cube_i)
   deallocate(cube_j)
   deallocate(cube_tile)
+  deallocate(orog_raw)
+  deallocate(orog_filt)
+  deallocate(slmsk)
+  deallocate(land_frac)
+  deallocate(lsmask)
   call unf90_close_ncfile(incid)
   write(*,*) '  The program: '//trim(script)//' is done normally!'
 end program convert_restart_vec2tiles

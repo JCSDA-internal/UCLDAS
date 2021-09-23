@@ -12,7 +12,8 @@ implicit none
   integer            :: cube_i(location), cube_j(location), cube_tile(location)
   integer            :: land_mask(nx,ny,tiles), vector_index(nx,ny,tiles)
   double precision   :: flon(nx,ny,tiles), flat(nx,ny,tiles), pi
-  real               :: glon(nx,ny,tiles), glat(nx,ny,tiles), orog_raw(nx,ny,tiles)
+  real               :: glon(nx,ny,tiles), glat(nx,ny,tiles)
+  real               :: orog_raw(nx,ny,tiles), orog_filt(nx,ny,tiles)
   real               :: land_frac(nx,ny,tiles), slmsk(nx,ny,tiles)
   integer            :: i, j, tile, ip
   character(len=256) :: ifname, ofname
@@ -25,10 +26,12 @@ implicit none
     call unf90_io_var('r', incid, nx, ny, glat(:,:,tile),      'geolat')
     call unf90_io_var('r', incid, nx, ny, land_frac(:,:,tile), 'land_frac')
     call unf90_io_var('r', incid, nx, ny, orog_raw(:,:,tile),  'orog_raw')
+    call unf90_io_var('r', incid, nx, ny, orog_filt(:,:,tile), 'orog_filt')
     call unf90_io_var('r', incid, nx, ny, slmsk(:,:,tile),     'slmsk')
     call unf90_close_ncfile(incid)
   enddo
-  ifname = '/scratch1/NCEPDEV/stmp2/Michael.Barlage/forcing/gswp3/static/ufs-land_C96_static_fields.nc'
+! ifname = '/scratch1/NCEPDEV/stmp2/Michael.Barlage/forcing/gswp3/static/ufs-land_C96_static_fields.nc'
+  ifname = '/scratch1/NCEPDEV/stmp2/Michael.Barlage/forcing/C96/static/ufs-land_C96_static_fields.nc'
   ofname = 'ufs-land_C96_static_vec2tiles.nc4'
   pi = 4.*atan(1.d0)
   call unf90_op_ncfile('R', ifname, incid)
@@ -52,6 +55,7 @@ implicit none
   call unf90_def_var(oncid, 'int', 'fxdim,fydim,ntile', 'vector_index')
   call unf90_out_varatt(oncid, 'vector_index', '_FillValue', ifillValue)
   call unf90_def_var(oncid, 'float', 'fxdim,fydim,ntile', 'orog_raw')
+  call unf90_def_var(oncid, 'float', 'fxdim,fydim,ntile', 'orog_filt')
   call unf90_def_var(oncid, 'float', 'fxdim,fydim,ntile', 'geolon')
   call unf90_out_varatt(oncid, 'geolon', 'units', 'degrees_east')
   call unf90_out_varatt(oncid, 'geolon', '_FillValue', rfillValue)
@@ -95,6 +99,7 @@ implicit none
   call unf90_io_var('w', oncid, nx, ny, tiles, glat, 'geolat') 
   call unf90_io_var('w', oncid, nx, ny, tiles, land_frac, 'land_frac') 
   call unf90_io_var('w', oncid, nx, ny, tiles, orog_raw,  'orog_raw') 
+  call unf90_io_var('w', oncid, nx, ny, tiles, orog_filt, 'orog_filt') 
   call unf90_io_var('w', oncid, nx, ny, tiles, slmsk,  'slmsk') 
   call unf90_close_ncfile(incid)
   call unf90_close_ncfile(oncid)

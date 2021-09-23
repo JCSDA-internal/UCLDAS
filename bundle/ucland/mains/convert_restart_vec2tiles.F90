@@ -3,6 +3,7 @@ program convert_restart_vec2tiles
   real,                 parameter :: rfillValue = 9.96921e+36
   double precision,     parameter :: dfillValue = 9.96921d+36
   integer,            allocatable :: cube_i(:), cube_j(:), cube_tile(:), vdimids(:)
+  real,               allocatable :: orog_raw(:), orog_filt(:), slmsk(:), land_frac(:)
   character(len=128), allocatable :: vnames(:), vdname(:)
   integer                         :: location, nx, ny, tiles
   integer                         :: incid, oncid, nDims, nVars, nAtts, uDimId
@@ -41,9 +42,17 @@ program convert_restart_vec2tiles
   allocate(cube_i(location))
   allocate(cube_j(location))
   allocate(cube_tile(location))
+  allocate(orog_raw(nx,ny))
+  allocate(orog_filt(nx,ny))
+  allocate(slmsk(nx,ny))
+  allocate(land_frac(nx,ny))
   call unf90_io_var('r', incid, location, cube_i,    'cube_i')
   call unf90_io_var('r', incid, location, cube_j,    'cube_j')
   call unf90_io_var('r', incid, location, cube_tile, 'cube_tile')
+  call unf90_io_var('r', incid, nx, ny, tiles, orog_raw,  'orog_raw')
+  call unf90_io_var('r', incid, nx, ny, tiles, orog_filt, 'orog_filt')
+  call unf90_io_var('r', incid, nx, ny, tiles, slmsk,     'slmsk')
+  call unf90_io_var('r', incid, nx, ny, tiles, land_frac, 'land_frac')
   call unf90_close_ncfile(incid)
 !
 ! ifname = '/scratch1/NCEPDEV/da/Azadeh.Gholoubi/GlobalLand/ufs-land-driver/run/restart/ufs_land_output.2000-01-01_00-00-00.nc'
@@ -51,6 +60,7 @@ program convert_restart_vec2tiles
   call unf90_op_ncfile('R', ifname, incid)
   call unf90_get_ncinfo(incid, nDimensions=nDims, nVariables=nVars, nAttributes=nAtts, unlimitedDimID=uDimId)
   allocate(vnames(nvars))
+
   do tile = 1, tiles
       write(ctile,'(i1)') tile
       tfname = trim(ofname)//'tile'//ctile//'.nc4'
@@ -112,6 +122,10 @@ program convert_restart_vec2tiles
           deallocate(vdimids)
           deallocate(vdname)
       enddo
+      call unf90_def_var(oncid, 'float', 'xaxis_1,yaxis_1', 'orog_raw')
+      call unf90_def_var(oncid, 'float', 'xaxis_1,yaxis_1', 'orog_filt')
+      call unf90_def_var(oncid, 'float', 'xaxis_1,yaxis_1', 'slmsk')
+      call unf90_def_var(oncid, 'float', 'xaxis_1,yaxis_1', 'land_frac')
 !     copy global attributes
       call unf90_copy_global_att(incid, oncid)
       call unf90_def_end(oncid)
@@ -131,12 +145,20 @@ program convert_restart_vec2tiles
           endif
           deallocate(vdimids)
       enddo
+      call unf90_io_var('w', oncid, nx, ny, land_frac(:,:,tile), 'land_frac')
+      call unf90_io_var('w', oncid, nx, ny, orog_raw(:,:,tile),  'orog_raw')
+      call unf90_io_var('w', oncid, nx, ny, orog_filt(:,:,tile), 'orog_filt')
+      call unf90_io_var('w', oncid, nx, ny, slmsk(:,:,tile),     'slmsk')
       call unf90_close_ncfile(oncid)
   enddo
   deallocate(vnames)
   deallocate(cube_i)
   deallocate(cube_j)
   deallocate(cube_tile)
+  deallocate(orog_raw)
+  deallocate(orog_filt)
+  deallocate(slmsk)
+  deallocate(land_frac)
   call unf90_close_ncfile(incid)
   write(*,*) '  The program: '//trim(script)//' is done normally!'
 end program convert_restart_vec2tiles

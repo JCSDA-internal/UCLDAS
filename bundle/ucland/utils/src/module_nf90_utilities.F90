@@ -6,13 +6,13 @@ module module_nf90_utilities
     module procedure unf90_io_varatt_char
     module procedure unf90_io_varatt_real
     module procedure unf90_io_varatt_int
-    module procedure unf90_io_varatt_double
+!   module procedure unf90_io_varatt_double
   end interface
   interface unf90_out_varatt
     module procedure unf90_out_varatt_char
     module procedure unf90_out_varatt_real
     module procedure unf90_out_varatt_int
-    module procedure unf90_out_varatt_double
+!   module procedure unf90_out_varatt_double
   end interface
   interface unf90_def_var
     module procedure unf90_def_var_str
@@ -22,19 +22,22 @@ module module_nf90_utilities
   interface unf90_io_var
     module procedure unf90_io1d_int
     module procedure unf90_io1d_real
-    module procedure unf90_io1d_double
+!   module procedure unf90_io1d_double
     module procedure unf90_io2d_int
     module procedure unf90_io2d_real
-    module procedure unf90_io2d_double
+    module procedure unf90_rd2d_real
+!   module procedure unf90_io2d_double
     module procedure unf90_io1d_time_real
-    module procedure unf90_io1d_time_double
+!   module procedure unf90_io1d_time_double
     module procedure unf90_io2d_time_real
-    module procedure unf90_io2d_time_double
-    module procedure unf90_io3d_real
+!   module procedure unf90_io2d_time_double
+!   module procedure unf90_io3d_real
+    module procedure unf90_rd3d_real
+    module procedure unf90_out3d_real
     module procedure unf90_io3d_int
-    module procedure unf90_io3d_double
+!   module procedure unf90_io3d_double
     module procedure unf90_io4d_real
-    module procedure unf90_io4d_double
+!   module procedure unf90_io4d_double
   end interface
   interface unf90_rd_tile2vec
     module procedure unf90_rd1d_real_tile2vec
@@ -458,6 +461,12 @@ end subroutine unf90_get_istart
   vartype = unf90_get_var_type(option)
   iret = nf90_def_var(ncid, trim(vname), vartype, dimid, varid)
   call unf90_check_err(iret)
+! if(vartype == nf90_float) then
+!     iret = nf90_inq_varid(ncid, trim(vname), varid)
+!     call unf90_check_err(iret)
+!     iret = nf90_put_att(ncid, varid, "_FillValue", -9.e10) 
+!     call unf90_check_err(iret)
+! endif
   if(present(varattname)) then
     tmpvaratt = varatt
     call unf90_io_varatt_char('w', ncid, vname, varattname, tmpvaratt)
@@ -648,7 +657,7 @@ end subroutine unf90_get_istart
   integer,          intent(in) :: ncid
   character(len=*), intent(in) :: varname, vname
   real,             intent(in) :: value
-  integer                         :: varid, iret
+  integer                      :: varid, iret
   if(trim(varname) == 'nf90_global') then
     iret = nf90_put_att(ncid, nf90_global, trim(vname), value)
   else
@@ -927,6 +936,19 @@ end subroutine unf90_get_istart
   call unf90_check_err(iret)
   end subroutine unf90_io2d_real
 !----------------------------------------
+  subroutine unf90_rd2d_real(ncid, ii, jj, r2d, vname, istart, icount)
+  implicit none
+  integer,           intent(in)  :: ncid, ii, jj
+  real,              intent(out) :: r2d(ii,jj)
+  character(len=*),  intent(in)  :: vname
+  integer, optional, intent(in)  :: istart(:), icount(:)
+  integer                        :: iret, varid
+  iret = nf90_inq_varid(ncid, trim(vname), varid)
+  call unf90_check_err(iret)
+  iret = nf90_get_var(ncid, varid, r2d, istart, icount)
+  call unf90_check_err(iret)
+  end subroutine unf90_rd2d_real
+!----------------------------------------
   subroutine unf90_rd1d_real_tile2vec(ncid, ii, jj, vec_index, location, r1d, vname)
   implicit none
   integer,          intent(in)  :: ncid, ii, jj, location
@@ -1053,6 +1075,35 @@ end subroutine unf90_get_istart
   endif
   call unf90_check_err(iret)
   end subroutine unf90_io3d_real
+!----------------------------------------
+  subroutine unf90_out3d_real(mode, ncid, lon, lat, lev, r3d, vname)
+  implicit none
+  character(len=1), intent(in) :: mode
+  integer,          intent(in) :: ncid, lon, lat, lev
+  real,             intent(in) :: r3d(lon,lat,lev)
+  character(len=*), intent(in) :: vname
+  integer                      :: iret, varid
+  iret = nf90_inq_varid(ncid, trim(vname), varid)
+  call unf90_check_err(iret)
+  if(mode == 'w' .or. mode == 'W') then
+    iret = nf90_put_var(ncid, varid, r3d)
+  else
+    stop 'invalid mode'
+  endif
+  call unf90_check_err(iret)
+  end subroutine unf90_out3d_real
+!----------------------------------------
+  subroutine unf90_rd3d_real(ncid, lon, lat, lev, r3d, vname)
+  implicit none
+  integer,          intent(in)  :: ncid, lon, lat, lev
+  real,             intent(out) :: r3d(lon,lat,lev)
+  character(len=*)              :: vname
+  integer                       :: iret, varid
+  iret = nf90_inq_varid(ncid, trim(vname), varid)
+  call unf90_check_err(iret)
+  iret = nf90_get_var(ncid, varid, r3d)
+  call unf90_check_err(iret)
+  end subroutine unf90_rd3d_real
 !----------------------------------------
   subroutine unf90_rd2d_real_tile2vec(ncid, ii, jj, kk, vec_index, location, r2d, vname)
   implicit none
