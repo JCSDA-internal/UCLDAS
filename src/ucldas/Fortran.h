@@ -36,6 +36,8 @@ namespace ucldas {
   typedef int F90hop;
   // Observation data base type
   typedef int F90odb;
+  // Localization
+  typedef int F90lclz;
 
 }  // namespace ucldas
 #endif  // UCLDAS_FORTRAN_H_

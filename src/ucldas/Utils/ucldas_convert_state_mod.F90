@@ -11,14 +11,14 @@ module ucldas_convert_state_mod
   use ucldas_utils, only: ucldas_remap_idw
   use kinds, only: kind_real
   use fms_io_mod, only: read_data, write_data, fms_io_init, fms_io_exit
-  use LND_remapping, only : remapping_CS, initialize_remapping, remapping_core_h
-  use LND_domains, only : pass_var, root_PE, sum_across_pes
+  use UCLAND_remapping, only : remapping_CS, initialize_remapping, remapping_core_h
+  use UCLAND_domains, only : pass_var, root_PE, sum_across_pes
   use mpp_mod, only     : mpp_broadcast, mpp_sync, mpp_sync_self
-  use LND_error_handler, only : LND_mesg, LND_error, FATAL, WARNING, is_root_pe
+  use UCLAND_error_handler, only : UCLAND_mesg, UCLAND_error, FATAL, WARNING, is_root_pe
   use mpp_domains_mod, only  : mpp_global_field, mpp_update_domains
   use horiz_interp_mod, only : horiz_interp_new, horiz_interp, horiz_interp_type
-  use LND_horizontal_regridding, only : meshgrid, fill_miss_2d
-  use LND_grid, only : ocean_grid_type
+  use UCLAND_horizontal_regridding, only : meshgrid, fill_miss_2d
+  use UCLAND_grid, only : ocean_grid_type
   use fckit_exception_module, only: fckit_exception
 
   implicit none
@@ -54,7 +54,7 @@ subroutine ucldas_convertstate_setup(self, src, des, hocn, hocn2)
   des%nzo_zstar = tmp(1)
 
   if (des%nzo_zstar /= src%nzo_zstar) call fckit_exception%abort(&
-     "target nzo_zstar /= source nzo_zstar! Reset maximum depth in target grid LND_input file and re-run ucldas gridgen")
+     "target nzo_zstar /= source nzo_zstar! Reset maximum depth in target grid UCLAND_input file and re-run ucldas gridgen")
 
 
   if (allocated(src%h_zstar)) deallocate(src%h_zstar)
@@ -177,7 +177,7 @@ subroutine ucldas_convertstate_change_resol(self, field_src, field_des, geom_src
   call initialize_remapping(remapCS2,'PPM_IH4')
 
   ! Set grid thickness based on zstar level for src & target grid
-  if (field_des%metadata%io_file=="ocn".or.field_des%metadata%io_file=='ice') then
+  if (field_des%io_file=="ocn".or.field_des%io_file=='ice') then
     mask_ = field_des%mask
     h_new1(isc1:iec1,jsc1:jec1,1:geom_src%nzo_zstar) = geom_src%h_zstar(isc1:iec1,jsc1:jec1,1:geom_src%nzo_zstar)
     h_new2(isc2:iec2,jsc2:jec2,1:geom_des%nzo_zstar) = geom_des%h_zstar(isc2:iec2,jsc2:jec2,1:geom_des%nzo_zstar)
@@ -201,11 +201,11 @@ subroutine ucldas_convertstate_change_resol(self, field_src, field_des, geom_src
 
   ! Converts src grid to zstar coordinate
   nz_ = geom_src%nzo_zstar
-  if (field_src%nz == 1 .or. field_src%metadata%io_file=="ice") nz_ = field_src%nz
+  if (field_src%nz == 1 .or. field_src%io_file=="ice") nz_ = field_src%nz
   allocate(tmp(isd1:ied1,jsd1:jed1,1:nz_),gdata(isg:ieg,jsg:jeg,1:nz_),tmp2(isd2:ied2,jsd2:jed2,1:nz_))
   allocate(h1(field_src%nz),h2(nz_))
   tmp = 0.d0 ; gdata = 0.d0 ; tmp2 = 0.d0;
-  if ( field_src%nz > 1 .and. field_src%metadata%io_file/="ice") then
+  if ( field_src%nz > 1 .and. field_src%io_file/="ice") then
     do j = jsc1, jec1
       do i = isc1, iec1
         tmp_nz = field_src%nz
@@ -232,9 +232,9 @@ subroutine ucldas_convertstate_change_resol(self, field_src, field_des, geom_src
       end do !i
     end do !j
   else
-    if (field_src%metadata%io_file=="ocn") tmp(:,:,1) = field_src%val(:,:,1) !*field_src%mask(:,:) !2D
-    if (field_src%metadata%io_file=="sfc") tmp(:,:,1) = field_src%val(:,:,1) !2D no mask
-    if (field_src%metadata%io_file=="ice") tmp(:,:,1:nz_) = field_src%val(:,:,1:nz_)
+    if (field_src%io_file=="ocn") tmp(:,:,1) = field_src%val(:,:,1) !*field_src%mask(:,:) !2D
+    if (field_src%io_file=="sfc") tmp(:,:,1) = field_src%val(:,:,1) !2D no mask
+    if (field_src%io_file=="ice") tmp(:,:,1:nz_) = field_src%val(:,:,1:nz_)
   end if ! field_src%nz > 1
   call mpp_update_domains(tmp, geom_src%Domain%mpp_domain)
 
@@ -248,7 +248,7 @@ subroutine ucldas_convertstate_change_resol(self, field_src, field_des, geom_src
   if(allocated(h1)) deallocate(h1)
   if(allocated(h2)) deallocate(h2)
   allocate(h1(nz_),h2(field_des%nz))
-  if ( field_des%nz > 1 .and. field_des%metadata%io_file/="ice") then
+  if ( field_des%nz > 1 .and. field_des%io_file/="ice") then
     do j = jsc2, jec2
       do i = isc2, iec2
         tmp_nz = nz_ !assume geom_src%nzo_zstar == geom%des%nzo_zstar
@@ -275,9 +275,9 @@ subroutine ucldas_convertstate_change_resol(self, field_src, field_des, geom_src
       end do !j
     end do !i
   else
-   if (field_des%metadata%io_file=="ocn") field_des%val(:,:,1) = tmp2(:,:,1)*field_des%mask(:,:) ! 2D
-   if (field_des%metadata%io_file=="sfc") field_des%val(:,:,1) = tmp2(:,:,1) ! 2D no mask
-   if (field_des%metadata%io_file=="ice") field_des%val(:,:,1:field_des%nz) = tmp2(:,:,1:field_des%nz)
+   if (field_des%io_file=="ocn") field_des%val(:,:,1) = tmp2(:,:,1)*field_des%mask(:,:) ! 2D
+   if (field_des%io_file=="sfc") field_des%val(:,:,1) = tmp2(:,:,1) ! 2D no mask
+   if (field_des%io_file=="ice") field_des%val(:,:,1:field_des%nz) = tmp2(:,:,1:field_des%nz)
   end if ! nz > 1
 
   call mpp_update_domains(field_des%val, geom_des%Domain%mpp_domain)
