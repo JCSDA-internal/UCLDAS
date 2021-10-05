@@ -19,6 +19,7 @@
 
 #include "ucldas/Fortran.h"
 
+#include "oops/base/GeneralizedDepartures.h"
 #include "oops/base/LocalIncrement.h"
 #include "oops/base/Variables.h"
 #include "oops/util/DateTime.h"
@@ -55,7 +56,7 @@ namespace ucldas {
    *  the tangent-linear and adjoint models.
    */
 
-  class Increment :
+  class Increment : public oops::GeneralizedDepartures,
     public util::Printable,
     public util::Serializable,
     private util::ObjectCounter<Increment> {

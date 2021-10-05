@@ -8,27 +8,18 @@
 #include <ostream>
 #include <string>
 
-#include "eckit/config/Configuration.h"
-
-#include "oops/interface/LinearVariableChange.h"
-#include "oops/util/abor1_cpp.h"
-#include "oops/util/Logger.h"
-
 #include "ucldas/Geometry/Geometry.h"
 #include "ucldas/Increment/Increment.h"
 #include "ucldas/State/State.h"
-#include "ucldas/Traits.h"
 #include "ucldas/Transforms/HorizFilt/HorizFilt.h"
 #include "ucldas/Transforms/HorizFilt/HorizFiltFortran.h"
 
+#include "eckit/config/Configuration.h"
+
+#include "oops/util/abor1_cpp.h"
+#include "oops/util/Logger.h"
 
 namespace ucldas {
-
-  // -----------------------------------------------------------------------------
-  static oops::LinearVariableChangeMaker<Traits,
-              oops::LinearVariableChange<Traits, HorizFilt> >
-              makerLinearVariableChangeHorizFilt_("HorizFiltUCLDAS");
-
   // -----------------------------------------------------------------------------
   HorizFilt::HorizFilt(const State & bkg,
                  const State & traj,

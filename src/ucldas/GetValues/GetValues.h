@@ -8,9 +8,9 @@
 #ifndef UCLDAS_GETVALUES_GETVALUES_H_
 #define UCLDAS_GETVALUES_GETVALUES_H_
 
-#include <memory>
 #include <ostream>
 #include <string>
+#include <memory>
 
 #include "ucldas/Fortran.h"
 
@@ -30,7 +30,6 @@ namespace ufo {
 namespace ucldas {
   class Geometry;
   class State;
-  class Model2GeoVaLs;
 }
 
 //-----------------------------------------------------------------------------
@@ -68,7 +67,6 @@ class GetValues : public util::Printable,
   F90getval keyGetValues_;
   ufo::Locations locs_;
   std::shared_ptr<const Geometry> geom_;
-  std::unique_ptr<Model2GeoVaLs> model2geovals_;
 };
 // -----------------------------------------------------------------------------
 

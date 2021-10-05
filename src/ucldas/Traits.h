@@ -16,6 +16,7 @@
 #include "ucldas/GetValues/GetValues.h"
 #include "ucldas/GetValues/LinearGetValues.h"
 #include "ucldas/Increment/Increment.h"
+#include "ucldas/Localization/Localization.h"
 #include "ucldas/ModelBias/ModelBias.h"
 #include "ucldas/ModelBias/ModelBiasCovariance.h"
 #include "ucldas/ModelBias/ModelBiasIncrement.h"
@@ -38,6 +39,7 @@ struct Traits {
   typedef ucldas::ModelBias           ModelAuxControl;
   typedef ucldas::ModelBiasIncrement  ModelAuxIncrement;
   typedef ucldas::ModelBiasCovariance ModelAuxCovariance;
+  typedef ucldas::Localization        Localization;
 };
 
 }  // namespace ucldas
