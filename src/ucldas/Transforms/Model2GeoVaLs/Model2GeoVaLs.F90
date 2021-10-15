@@ -107,19 +107,19 @@ subroutine ucldas_model2geovals_changevar_f90(c_key_geom, c_key_xin, c_key_xout)
     select case (xout%fields(i)%name)
 
     ! fields that are obtained from geometry
-    case ('distance_from_coast')
-      xout%fields(i)%val(:,:,1) = real(geom%distance_from_coast, kind=kind_real)
+!   case ('distance_from_coast')
+!     xout%fields(i)%val(:,:,1) = real(geom%distance_from_coast, kind=kind_real)
 
     case ('sea_area_fraction')
       xout%fields(i)%val(:,:,1) = real(geom%mask2d, kind=kind_real)
 
-    case ('mesoscale_representation_error')
-      ! Representation errors: dx/R
-      ! TODO, why is the halo left to 0 for RR ??
-      xout%fields(i)%val(geom%isc:geom%iec, geom%jsc:geom%jec, 1) = &
-          geom%mask2d(geom%isc:geom%iec, geom%jsc:geom%jec) * &
-          sqrt(geom%cell_area(geom%isc:geom%iec, geom%jsc:geom%jec) / &
-               geom%rossby_radius(geom%isc:geom%iec, geom%jsc:geom%jec))
+!   case ('mesoscale_representation_error')
+!     ! Representation errors: dx/R
+!     ! TODO, why is the halo left to 0 for RR ??
+!     xout%fields(i)%val(geom%isc:geom%iec, geom%jsc:geom%jec, 1) = &
+!         geom%mask2d(geom%isc:geom%iec, geom%jsc:geom%jec) * &
+!         sqrt(geom%cell_area(geom%isc:geom%iec, geom%jsc:geom%jec) / &
+!              geom%rossby_radius(geom%isc:geom%iec, geom%jsc:geom%jec))
 
     ! special derived state variables
     case ('surface_temperature_where_sea')

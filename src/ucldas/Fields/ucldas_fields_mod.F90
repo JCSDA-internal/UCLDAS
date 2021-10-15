@@ -213,16 +213,16 @@ subroutine ucldas_fields_init_vars(self, vars)
       self%fields(i)%lat => self%geom%lat
       if (self%fields(i)%metadata%masked) &
         self%fields(i)%mask => self%geom%mask2d
-    case ('u')
-      self%fields(i)%lon => self%geom%lonu
-      self%fields(i)%lat => self%geom%latu
-      if (self%fields(i)%metadata%masked) &
-        self%fields(i)%mask => self%geom%mask2du
-    case ('v')
-        self%fields(i)%lon => self%geom%lonv
-        self%fields(i)%lat => self%geom%latv
-        if (self%fields(i)%metadata%masked) &
-          self%fields(i)%mask => self%geom%mask2dv
+!   case ('u')
+!     self%fields(i)%lon => self%geom%lonu
+!     self%fields(i)%lat => self%geom%latu
+!     if (self%fields(i)%metadata%masked) &
+!       self%fields(i)%mask => self%geom%mask2du
+!   case ('v')
+!       self%fields(i)%lon => self%geom%lonv
+!       self%fields(i)%lat => self%geom%latv
+!       if (self%fields(i)%metadata%masked) &
+!         self%fields(i)%mask => self%geom%mask2dv
     case default
       call abor1_ftn('ucldas_fields::create(): Illegal grid '// &
                      self%fields(i)%metadata%grid // &
@@ -861,7 +861,7 @@ subroutine ucldas_fields_write_file(fld, filename)
   end do
 
   ! some other derived fields that should be written out
-  call write_data( filename, "rossby_radius", fld%geom%rossby_radius, fld%geom%Domain%mpp_domain)
+! call write_data( filename, "rossby_radius", fld%geom%rossby_radius, fld%geom%Domain%mpp_domain)
 
   call fms_io_exit()
 end subroutine ucldas_fields_write_file

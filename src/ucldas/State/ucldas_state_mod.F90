@@ -80,22 +80,22 @@ subroutine ucldas_state_rotate(self, coordinate, uvars, vvars)
     un = uocn%val
     vn = vocn%val
 
-    select case(trim(coordinate))
-    case("north")   ! rotate (uocn, vocn) to geo north
-      do z=1,uocn%nz
-        uocn%val(:,:,z) = &
-        (self%geom%cos_rot(:,:)*un(:,:,z) + self%geom%sin_rot(:,:)*vn(:,:,z)) * uocn%mask(:,:)
-        vocn%val(:,:,z) = &
-        (- self%geom%sin_rot(:,:)*un(:,:,z) + self%geom%cos_rot(:,:)*vn(:,:,z)) * vocn%mask(:,:)
-      end do
-    case("grid")
-      do z=1,uocn%nz
-        uocn%val(:,:,z) = &
-        (self%geom%cos_rot(:,:)*un(:,:,z) - self%geom%sin_rot(:,:)*vn(:,:,z)) * uocn%mask(:,:)
-        vocn%val(:,:,z) = &
-        (self%geom%sin_rot(:,:)*un(:,:,z) + self%geom%cos_rot(:,:)*vn(:,:,z)) * vocn%mask(:,:)
-      end do
-    end select
+!   select case(trim(coordinate))
+!   case("north")   ! rotate (uocn, vocn) to geo north
+!     do z=1,uocn%nz
+!       uocn%val(:,:,z) = &
+!       (self%geom%cos_rot(:,:)*un(:,:,z) + self%geom%sin_rot(:,:)*vn(:,:,z)) * uocn%mask(:,:)
+!       vocn%val(:,:,z) = &
+!       (- self%geom%sin_rot(:,:)*un(:,:,z) + self%geom%cos_rot(:,:)*vn(:,:,z)) * vocn%mask(:,:)
+!     end do
+!   case("grid")
+!     do z=1,uocn%nz
+!       uocn%val(:,:,z) = &
+!       (self%geom%cos_rot(:,:)*un(:,:,z) - self%geom%sin_rot(:,:)*vn(:,:,z)) * uocn%mask(:,:)
+!       vocn%val(:,:,z) = &
+!       (self%geom%sin_rot(:,:)*un(:,:,z) + self%geom%cos_rot(:,:)*vn(:,:,z)) * vocn%mask(:,:)
+!     end do
+!   end select
     deallocate(un, vn)
 
     ! update halos

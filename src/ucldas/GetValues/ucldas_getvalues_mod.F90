@@ -96,16 +96,16 @@ function ucldas_getvalues_getinterp(self, geom, grid, masked, locs) result(idx)
     lon => geom%lon
     lat => geom%lat
     mask => geom%mask2d
-  case ('u')
-    idx = 3
-    lon => geom%lonu
-    lat => geom%latu
-    mask => geom%mask2du
-  case ('v')
-    idx = 5
-    lon => geom%lonv
-    lat => geom%latv
-    mask => geom%mask2dv
+! case ('u')
+!   idx = 3
+!   lon => geom%lonu
+!   lat => geom%latu
+!   mask => geom%mask2du
+! case ('v')
+!   idx = 5
+!   lon => geom%lonv
+!   lat => geom%latv
+!   mask => geom%mask2dv
   case default
     call abor1_ftn('error in ucldas_getvalues_setupinterp. grid: '//grid)
   end select

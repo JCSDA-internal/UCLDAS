@@ -117,8 +117,8 @@ subroutine ucldas_convertstate_change_resol2d(self, field_src, field_des, geom_s
   isd2 = geom_des%isd ; ied2 = geom_des%ied ; jsd2 = geom_des%jsd ; jed2 = geom_des%jed
 
   lon_in = geom_src%lonh ; lat_in = geom_src%lath
-  if (field_src%name == "uocn" .and. field_des%name == "uocn") lon_in = geom_src%lonq
-  if (field_src%name == "vocn" .and. field_des%name == "vocn") lat_in = geom_src%latq
+! if (field_src%name == "uocn" .and. field_des%name == "uocn") lon_in = geom_src%lonq
+! if (field_src%name == "vocn" .and. field_des%name == "vocn") lat_in = geom_src%latq
 
   ! Initialize work arrays
   nz_ = field_src%nz
@@ -193,8 +193,8 @@ subroutine ucldas_convertstate_change_resol(self, field_src, field_des, geom_src
     return
   end if
   lon_in = geom_src%lonh ; lat_in = geom_src%lath
-  if (field_src%name == "uocn" .and. field_des%name == "uocn") lon_in = geom_src%lonq
-  if (field_src%name == "vocn" .and. field_des%name == "vocn") lat_in = geom_src%latq
+! if (field_src%name == "uocn" .and. field_des%name == "uocn") lon_in = geom_src%lonq
+! if (field_src%name == "vocn" .and. field_des%name == "vocn") lat_in = geom_src%latq
 !  call meshgrid(geom_des%lonh(isd2:ied2),geom_des%lath(jsd2:jed2),lon_out,lat_out)
 !  if (field_des%name == "uocn") call meshgrid(geom_des%lonq(isd2:ied2),geom_des%lath(jsd2:jed2),lon_out,lat_out)
 !  if (field_des%name == "vocn") call meshgrid(geom_des%lonh(isd2:ied2),geom_des%latq(jsd2:jed2),lon_out,lat_out)

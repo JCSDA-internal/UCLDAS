@@ -252,12 +252,12 @@ subroutine ucldas_bump_correlation(self, horiz_convol, geom, f_conf_bump, f_conf
   lats = pack(geom%lat(geom%isc:geom%iec,geom%jsc:geom%jec),.true.)
 
   ! Add area
-  afield = geom%afunctionspace%create_field(name='area', kind=atlas_real(kind_real), levels=0)
-  call afield%data(real_ptr_1)
-  area = pack(geom%cell_area(geom%isc:geom%iec,geom%jsc:geom%jec),.true.)
-  real_ptr_1 = area
-  call afieldset%add(afield)
-  call afield%final()
+! afield = geom%afunctionspace%create_field(name='area', kind=atlas_real(kind_real), levels=0)
+! call afield%data(real_ptr_1)
+! area = pack(geom%cell_area(geom%isc:geom%iec,geom%jsc:geom%jec),.true.)
+! real_ptr_1 = area
+! call afieldset%add(afield)
+! call afield%final()
 
   ! Add vertical unit
   afield = geom%afunctionspace%create_field(name='vunit', kind=atlas_real(kind_real), levels=1)
@@ -293,7 +293,7 @@ subroutine ucldas_bump_correlation(self, horiz_convol, geom, f_conf_bump, f_conf
     afield = geom%afunctionspace%create_field('var',kind=atlas_real(kind_real),levels=0)
     call rh%add(afield)
     call afield%data(real_ptr_1)
-    real_ptr_1 = r_base + r_mult*pack(geom%rossby_radius(geom%isc:geom%iec,geom%jsc:geom%jec), .true.)
+!   real_ptr_1 = r_base + r_mult*pack(geom%rossby_radius(geom%isc:geom%iec,geom%jsc:geom%jec), .true.)
     ! min based on grid size
     if (r_min_grid .gt. 0.0) then
       real_ptr_1 = max(real_ptr_1,  sqrt(area)*r_min_grid )
