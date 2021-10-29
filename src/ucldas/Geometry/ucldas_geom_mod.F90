@@ -52,8 +52,8 @@ type :: ucldas_geom
 !   real(kind=kind_real), allocatable, dimension(:,:) :: sin_rot, cos_rot !< Rotation between logical grid
                                                                           !< and North
     real(kind=kind_real), allocatable, dimension(:,:) :: mask2d    !< Tracer points. 0 = land 1 = ocean
-    real(kind=kind_real), allocatable, dimension(:,:) :: mask2du   !< u        "   . 0 = land 1 = ocean
-    real(kind=kind_real), allocatable, dimension(:,:) :: mask2dv   !< v        "   . 0 = land 1 = ocean
+!   real(kind=kind_real), allocatable, dimension(:,:) :: mask2du   !< u        "   . 0 = land 1 = ocean
+!   real(kind=kind_real), allocatable, dimension(:,:) :: mask2dv   !< v        "   . 0 = land 1 = ocean
 !   real(kind=kind_real), allocatable, dimension(:,:) :: cell_area
     real(kind=kind_real), allocatable, dimension(:,:) :: cell_elev
 !   real(kind=kind_real), allocatable, dimension(:,:) :: rossby_radius
@@ -124,8 +124,8 @@ subroutine geom_init(self, f_conf, f_comm)
 ! call mpp_update_domains(self%sin_rot, self%Domain%mpp_domain)
 ! call mpp_update_domains(self%cos_rot, self%Domain%mpp_domain)
   call mpp_update_domains(self%mask2d, self%Domain%mpp_domain)
-  call mpp_update_domains(self%mask2du, self%Domain%mpp_domain)
-  call mpp_update_domains(self%mask2dv, self%Domain%mpp_domain)
+! call mpp_update_domains(self%mask2du, self%Domain%mpp_domain)
+! call mpp_update_domains(self%mask2dv, self%Domain%mpp_domain)
 ! call mpp_update_domains(self%cell_area, self%Domain%mpp_domain)
   call mpp_update_domains(self%cell_elev, self%Domain%mpp_domain)
 ! call mpp_update_domains(self%rossby_radius, self%Domain%mpp_domain)
@@ -159,8 +159,8 @@ subroutine geom_end(self)
 ! if (allocated(self%sin_rot))       deallocate(self%sin_rot)
 ! if (allocated(self%cos_rot))       deallocate(self%cos_rot)
   if (allocated(self%mask2d))        deallocate(self%mask2d)
-  if (allocated(self%mask2du))       deallocate(self%mask2du)
-  if (allocated(self%mask2dv))       deallocate(self%mask2dv)
+! if (allocated(self%mask2du))       deallocate(self%mask2du)
+! if (allocated(self%mask2dv))       deallocate(self%mask2dv)
 ! if (allocated(self%cell_area))     deallocate(self%cell_area)
   if (allocated(self%cell_elev))     deallocate(self%cell_elev)
 ! if (allocated(self%rossby_radius)) deallocate(self%rossby_radius)
@@ -267,8 +267,8 @@ subroutine geom_clone(self, other)
 ! self%sin_rot = other%sin_rot
 ! self%cos_rot = other%cos_rot
   self%mask2d = other%mask2d
-  self%mask2du = other%mask2du
-  self%mask2dv = other%mask2dv
+! self%mask2du = other%mask2du
+! self%mask2dv = other%mask2dv
 ! self%cell_area = other%cell_area
   self%cell_elev = other%cell_elev
 ! self%rossby_radius = other%rossby_radius
@@ -307,8 +307,8 @@ subroutine geom_gridgen(self)
 ! self%cos_rot = ucland_config%grid%cos_rot
 
   self%mask2d = ucland_config%grid%mask2dT
-  self%mask2du = ucland_config%grid%mask2dCu
-  self%mask2dv = ucland_config%grid%mask2dCv
+! self%mask2du = ucland_config%grid%mask2dCu
+! self%mask2dv = ucland_config%grid%mask2dCv
 ! self%cell_area  = ucland_config%grid%areaT
   self%cell_elev  = ucland_config%grid%elev
   self%h = ucland_config%LND_CSp%h
@@ -373,8 +373,8 @@ subroutine geom_allocate(self)
 ! allocate(self%cos_rot(isd:ied,jsd:jed));       self%cos_rot = 0.0_kind_real
 
   allocate(self%mask2d(isd:ied,jsd:jed));        self%mask2d = 0.0_kind_real
-  allocate(self%mask2du(isd:ied,jsd:jed));       self%mask2du = 0.0_kind_real
-  allocate(self%mask2dv(isd:ied,jsd:jed));       self%mask2dv = 0.0_kind_real
+! allocate(self%mask2du(isd:ied,jsd:jed));       self%mask2du = 0.0_kind_real
+! allocate(self%mask2dv(isd:ied,jsd:jed));       self%mask2dv = 0.0_kind_real
 
 ! allocate(self%cell_area(isd:ied,jsd:jed));     self%cell_area = 0.0_kind_real
   allocate(self%cell_elev(isd:ied,jsd:jed));     self%cell_elev = 0.0_kind_real
@@ -585,16 +585,16 @@ subroutine geom_write(self)
                                    &'mask2d', &
                                    &self%mask2d(:,:), &
                                    domain=self%Domain%mpp_domain)
-  idr_geom = register_restart_field(geom_restart, &
-                                   &self%geom_grid_file, &
-                                   &'mask2du', &
-                                   &self%mask2du(:,:), &
-                                   domain=self%Domain%mpp_domain)
-  idr_geom = register_restart_field(geom_restart, &
-                                   &self%geom_grid_file, &
-                                   &'mask2dv', &
-                                   &self%mask2dv(:,:), &
-                                   domain=self%Domain%mpp_domain)
+! idr_geom = register_restart_field(geom_restart, &
+!                                  &self%geom_grid_file, &
+!                                  &'mask2du', &
+!                                  &self%mask2du(:,:), &
+!                                  domain=self%Domain%mpp_domain)
+! idr_geom = register_restart_field(geom_restart, &
+!                                  &self%geom_grid_file, &
+!                                  &'mask2dv', &
+!                                  &self%mask2dv(:,:), &
+!                                  domain=self%Domain%mpp_domain)
   idr_geom = register_restart_field(geom_restart, &
                                    &self%geom_grid_file, &
                                    &'h', &
@@ -724,16 +724,16 @@ subroutine geom_read(self)
                                    &'mask2d', &
                                    &self%mask2d(:,:), &
                                    domain=self%Domain%mpp_domain)
-  idr_geom = register_restart_field(geom_restart, &
-                                   &self%geom_grid_file, &
-                                   &'mask2du', &
-                                   &self%mask2du(:,:), &
-                                   domain=self%Domain%mpp_domain)
-  idr_geom = register_restart_field(geom_restart, &
-                                   &self%geom_grid_file, &
-                                   &'mask2dv', &
-                                   &self%mask2dv(:,:), &
-                                   domain=self%Domain%mpp_domain)
+! idr_geom = register_restart_field(geom_restart, &
+!                                  &self%geom_grid_file, &
+!                                  &'mask2du', &
+!                                  &self%mask2du(:,:), &
+!                                  domain=self%Domain%mpp_domain)
+! idr_geom = register_restart_field(geom_restart, &
+!                                  &self%geom_grid_file, &
+!                                  &'mask2dv', &
+!                                  &self%mask2dv(:,:), &
+!                                  domain=self%Domain%mpp_domain)
   idr_geom = register_restart_field(geom_restart, &
                                    &self%geom_grid_file, &
                                    &'h', &
