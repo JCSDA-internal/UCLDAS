@@ -572,7 +572,7 @@ subroutine geom_write(self)
 !                                  domain=self%Domain%mpp_domain)
   idr_geom = register_restart_field(geom_restart, &
                                    &self%geom_grid_file, &
-                                   &'elev', &
+                                   &'elevation', &
                                    &self%cell_elev(:,:), &
                                    domain=self%Domain%mpp_domain)
 ! idr_geom = register_restart_field(geom_restart, &
@@ -711,7 +711,7 @@ subroutine geom_read(self)
 !                                  domain=self%Domain%mpp_domain)
   idr_geom = register_restart_field(geom_restart, &
                                    &self%geom_grid_file, &
-                                   &'elev', &
+                                   &'elevation', &
                                    &self%cell_elev(:,:), &
                                    domain=self%Domain%mpp_domain)
 ! idr_geom = register_restart_field(geom_restart, &
