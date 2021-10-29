@@ -117,6 +117,7 @@ set( ucldas_model_param
   Data/72x35x25/ice.bkgerror.nc
   Data/72x35x25/ocn.bkgerror.nc
   Data/72x35x25/wav.bkgerror.nc
+  Data/72x35x25/ucldas_gridspec.nc
   Data/72x35x25/LND_input
   Data/72x35x25/LND_input_small
   Data/72x35x25/LND_override_bgc
